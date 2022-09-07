@@ -382,7 +382,8 @@ pub type Textures = wgpu::BindGroup;
 
 // Main renderer class. this will contain all methods and data related to the renderer
 pub struct Renderer {
-    pub(crate) surface: wgpu::Surface,
+    pub(crate) instance: wgpu::Instance,
+    pub(crate) surface: Option<wgpu::Surface>,
     #[cfg(feature = "gui")]
     pub(crate) adapter: wgpu::Adapter,
     pub(crate) device: wgpu::Device,

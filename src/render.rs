@@ -27,14 +27,15 @@ impl Renderer {
         power_preference: crate::PowerPreference,
     ) -> anyhow::Result<Self> {
         let size = window.inner_size();
+        dbg!(size);
 
         // The instance is a handle to our GPU
         let instance = wgpu::Instance::new(wgpu::Backends::all());
-        let surface = unsafe { instance.create_surface(window) };
+        // let surface = unsafe { instance.create_surface(window) };
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: power_preference,
-                compatible_surface: Some(&surface),
+                compatible_surface: None, // Some(&surface),
                 force_fallback_adapter: false,
             })
             .await
@@ -52,15 +53,15 @@ impl Renderer {
             .await
             .unwrap();
 
-        let tex_format = surface.get_supported_formats(&adapter)[0];
+        // let tex_format = surface.get_supported_formats(&adapter)[0];
         let config = wgpu::SurfaceConfiguration {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
-            format: tex_format, //wgpu::TextureFormat::Bgra8UnormSrgb,
+            format:  wgpu::TextureFormat::Rgba8UnormSrgb,
             width: size.width,
             height: size.height,
-            present_mode: wgpu::PresentMode::Immediate,
+            present_mode: wgpu::PresentMode::Mailbox,
         };
-        surface.configure(&device, &config);
+        // surface.configure(&device, &config);
 
         let texture_bind_group_layout =
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -104,9 +105,10 @@ impl Renderer {
         let depth_buffer = Renderer::build_depth_buffer("Depth Buffer", &device, &config);
 
         let mut renderer = Self {
+            instance,
             #[cfg(feature = "gui")]
             adapter,
-            surface,
+            surface: None,
             device,
             queue,
             config,
@@ -153,8 +155,8 @@ impl Renderer {
         self.size = new_size;
         self.config.width = new_size.width;
         self.config.height = new_size.height;
-        self.surface.configure(&self.device, &self.config);
-        self.depth_buffer = Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
+        // self.surface.configure(&self.device, &self.config);
+        // self.depth_buffer = Self::build_depth_buffer("Depth Buffer", &self.device, &self.config);
     }
 
     pub(crate) fn render(
@@ -164,7 +166,10 @@ impl Renderer {
         #[cfg(feature = "gui")] imgui_renderer: &mut imgui_wgpu::Renderer,
         #[cfg(feature = "gui")] ui: imgui::Ui,
     ) -> Result<(), wgpu::SurfaceError> {
-        let frame = self.surface.get_current_texture()?;
+
+        let surface = if let Some(ref surface) = self.surface { surface } else { return Ok(()); };
+
+        let frame = surface.get_current_texture()?;
         let view = frame
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());

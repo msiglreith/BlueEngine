@@ -207,6 +207,7 @@ impl crate::header::Renderer {
         device: &wgpu::Device,
         config: &wgpu::SurfaceConfiguration,
     ) -> (Texture, TextureView, Sampler) {
+        dbg!(&config);
         let size = wgpu::Extent3d {
             width: config.width,
             height: config.height,

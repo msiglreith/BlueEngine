@@ -11,12 +11,20 @@ use blue_engine::{
     primitive_shapes::triangle,
 };
 
+use log::info;
+
+#[cfg_attr(
+    target_os = "android",
+    ndk_glue::main(backtrace = "on", logger(level = "debug", tag = "wgpu"))
+)]
 fn main() {
-    let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
+    info!("hello world");
 
-    let _ = triangle(ObjectSettings::default(), &mut engine).unwrap();
+    // let mut engine = Engine::new(WindowDescriptor::default()).expect("win");
 
-    engine
-        .update_loop(move |_, _, _, _, _| {})
-        .expect("Error during update loop");
+    // let _ = triangle(ObjectSettings::default(), &mut engine).unwrap();
+
+    // engine
+    //     .update_loop(move |_, _, _, _, _| {})
+    //     .expect("Error during update loop");
 }

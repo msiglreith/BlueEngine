@@ -18,7 +18,7 @@ impl Engine {
     /// Creates a new window in current thread.
     #[allow(unreachable_code)]
     pub fn new(settings: WindowDescriptor) -> anyhow::Result<Self> {
-        env_logger::init();
+        // env_logger::init();
         // Dimentions of the window, as width and height
         // and then are set as a logical size that the window can accept
         let dimention = winit::dpi::PhysicalSize {
@@ -31,7 +31,7 @@ impl Engine {
 
         // And we will create a new window and set all the options we stored
         let new_window = WindowBuilder::new()
-            .with_inner_size(size) // sets the width and height of window
+            // .with_inner_size(size) // sets the width and height of window
             .with_title(String::from(settings.title)) // sets title of the window
             .with_decorations(settings.decorations) // sets if the window should have borders
             .with_resizable(settings.resizable); // sets the window to be resizable
@@ -135,6 +135,8 @@ impl Engine {
         #[cfg(feature = "gui")]
         let mut last_frame = std::time::Instant::now();
 
+        dbg!("loop start");
+
         // The main loop
         event_loop.run(move |events, _, control_flow| {
             // updates the data on what events happened before the frame start
@@ -158,6 +160,17 @@ impl Engine {
                     WindowEvent::CloseRequested => *control_flow = ControlFlow::Exit,
                     _ => {}
                 },
+
+                Event::Resumed => {
+                    let surface = unsafe { renderer.instance.create_surface(&window) };
+                    surface.configure(&renderer.device, &renderer.config);
+                    renderer.depth_buffer = Renderer::build_depth_buffer("Depth Buffer", &renderer.device, &renderer.config);
+                    renderer.surface = Some(surface);
+                }
+
+                Event::Suspended => {
+                    renderer.surface = None;
+                }
 
                 Event::DeviceEvent { event, .. } => device_event = event,
                 Event::MainEventsCleared => {
